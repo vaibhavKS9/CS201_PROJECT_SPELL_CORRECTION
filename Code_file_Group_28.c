@@ -44,18 +44,18 @@ void copy_rest(int j,char d[],char s[]) {
 //  Node of a TST(ternary search tree)
 struct Node
 {
-	char data;
-	unsigned isEndOfString: 1;                  // 1 i.e true if this letter is the last letter of one of the words that are stored in TST
-	struct Node *left, *eq, *right;
+	char value;
+	unsigned is_End_of_Word: 1;                  // 1 i.e true if this letter is the last letter of one of the words that are stored in TST
+	struct Node *left_pointer, *eq, *right_pointer;
 };
 
-// This function is used to create a default Ternary search tree Node with its left and right child pointing NULL
-struct Node* newNode(char data)
+// This function is used to create a default Ternary search tree Node with its left_pointer and right_pointer child pointing NULL
+struct Node* newNode(char value)
 {
 	struct Node* temp=(struct Node*)malloc(sizeof(struct Node));
-	temp->data=data;
-	temp->isEndOfString=0;
-	temp->left=temp->eq=temp->right=NULL;
+	temp->value=value;
+	temp->is_End_of_Word=0;
+	temp->left_pointer=temp->eq=temp->right_pointer=NULL;
 	return temp;
 }
 
@@ -66,13 +66,13 @@ void insert(struct Node** root,char *word)
 	if (!(*root)){
 		*root=newNode(*word);}
 
-	// if present letter of word is smaller than root's letter than insertion happens in left subtree of root of TST
-	if ((*word)<(*root)->data){
-		insert(&((*root)->left),word);}
+	// if present letter of word is smaller than root's letter than insertion happens in left_pointer subtree of root of TST
+	if ((*word)<(*root)->value){
+		insert(&((*root)->left_pointer),word);}
 
-	// if present letter of word is greater than root's letter then insertion happens in right subtree of root of TST
-	else if ((*word)>(*root)->data){
-		insert(&((*root)->right),word);}
+	// if present letter of word is greater than root's letter then insertion happens in right_pointer subtree of root of TST
+	else if ((*word)>(*root)->value){
+		insert(&((*root)->right_pointer),word);}
 
 	// if present letter of word is same as root's letter,
 	else
@@ -82,8 +82,29 @@ void insert(struct Node** root,char *word)
         }
 		// if it is the end letter of word
 		else{
-			(*root)->isEndOfString = 1;
+			(*root)->is_End_of_Word = 1;
         }
+    }
+}
+
+
+// this search function just search if the word given in this function argument is present in TST
+int search(struct Node *root, char *word)
+{
+    if (!root){
+        return 0;
+        }
+    if (*word < (root)->value){
+        return search(root->left_pointer, word);
+        }
+    else if (*word > (root)->value){
+        return search(root->right_pointer, word);
+        }
+    else
+    {
+        if (*(word+1) == '\0')
+            return root->is_End_of_Word;
+        return search(root->eq, word+1);
     }
 }
 
@@ -91,13 +112,14 @@ void insert(struct Node** root,char *word)
 // the following function is used for traversing through the TST
 void traverseTST2(struct Node* root, char* buffer, int depth,char* subtext)
 {   
+    
 	if (root)
-	{
-		traverseTST2(root->left,buffer,depth,subtext);
+	{   
+        
+		traverseTST2(root->left_pointer,buffer,depth,subtext);
 
-
-		buffer[depth]=root->data;
-		if (root->isEndOfString)
+		buffer[depth]=root->value;
+		if (root->is_End_of_Word)
 		{
 			buffer[depth+1] = '\0';
             int k=strlen(subtext)+strlen(buffer);
@@ -109,8 +131,11 @@ void traverseTST2(struct Node* root, char* buffer, int depth,char* subtext)
             w+=1;
 		}
         
+        
+        
+        
 		traverseTST2(root->eq, buffer, depth + 1,subtext);
-		traverseTST2(root->right, buffer, depth,subtext);
+		traverseTST2(root->right_pointer, buffer, depth,subtext);
 	}
 }
 
@@ -124,17 +149,17 @@ int search_similar(struct Node *root, char *word,char*key)
 	if (!root){
 		return -1;
     }
-	if (*word < (root)->data){   
-		return search_similar(root->left,word,key);
+	if (*word < (root)->value){   
+		return search_similar(root->left_pointer,word,key);
     }
-	else if (*word > (root)->data){
-        return search_similar(root->right, word,key);
+	else if (*word > (root)->value){
+        return search_similar(root->right_pointer, word,key);
     }
 
 	else
 	{   i+=1;
 		if (*(word+1) == '\0'){
-			return root->isEndOfString;
+			return root->is_End_of_Word;
         }
         else if (search_similar(root->eq, word+1,key)==-1){
             
@@ -144,6 +169,7 @@ int search_similar(struct Node *root, char *word,char*key)
             //printf("is the word changing %s\n",key);
             copy_string(subtext,key,i);
             //printf("subtxt made is %s\n",subtext);
+
             // if the max similar letter that could make dictionary word are finally reached then it traverses all the possible words with those similar letter
             traverseTST2(root->eq, buffer,0,subtext);
             return 1;
@@ -152,25 +178,7 @@ int search_similar(struct Node *root, char *word,char*key)
 	}
 }
 
-// this search function just search if the word given in this function argument is present in TST
-int search(struct Node *root, char *word)
-{
-    if (!root){
-        return 0;
-        }
-    if (*word < (root)->data){
-        return search(root->left, word);
-        }
-    else if (*word > (root)->data){
-        return search(root->right, word);
-        }
-    else
-    {
-        if (*(word+1) == '\0')
-            return root->isEndOfString;
-        return search(root->eq, word+1);
-    }
-}
+
 
 //the following function just simply replaces every letter with adjacent character in keyboard and then checks from search function if the the replaced word is in TST if yes then returns that word immediately
 
@@ -195,11 +203,11 @@ int replace(struct Node *root,char* word,char c,int uptill){
             
             
                 if(search(root,new_left)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_left);
+                    printf("corrected form of %s should be %s\n ",word,new_left);
                     return 1;
                 }
                 else if(search(root,new_right)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_right);
+                    printf("corrected form of %s should be %s\n ",word,new_right);
                     return 1;
                 }
             
@@ -212,7 +220,7 @@ int replace(struct Node *root,char* word,char c,int uptill){
             
             
                 if(search(root,new_left)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_left);
+                    printf("corrected form of %s should be %s\n ",word,new_left);
                     return 1;
                 }
             
@@ -226,7 +234,7 @@ int replace(struct Node *root,char* word,char c,int uptill){
             
             
                 if(search(root,new_right)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_right);
+                    printf("corrected form of %s should be %s\n ",word,new_right);
                     return 1;
                 }
             
@@ -253,11 +261,11 @@ int replace(struct Node *root,char* word,char c,int uptill){
             
             
                 if(search(root,new_left)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_left);
+                    printf("corrected form of %s should be %s\n ",word,new_left);
                     return 1;
                 }
                 else if(search(root,new_right)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_right);
+                    printf("corrected form of %s should be %s\n ",word,new_right);
                     return 1;
                 }
             
@@ -270,7 +278,7 @@ int replace(struct Node *root,char* word,char c,int uptill){
             
             
                 if(search(root,new_left)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_left);
+                    printf("corrected form of %s should be %s\n ",word,new_left);
                     return 1;
                 }
             
@@ -284,7 +292,7 @@ int replace(struct Node *root,char* word,char c,int uptill){
             
             
                 if(search(root,new_right)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_right);
+                    printf("corrected form of %s should be %s\n ",word,new_right);
                     return 1;
                 }
             
@@ -312,11 +320,11 @@ int replace(struct Node *root,char* word,char c,int uptill){
             
             
                 if(search(root,new_left)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_left);
+                    printf("corrected form of %s should be %s\n ",word,new_left);
                     return 1;
                 }
                 else if(search(root,new_right)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_right);
+                    printf("corrected form of %s should be %s\n ",word,new_right);
                     return 1;
                 }
             
@@ -329,7 +337,7 @@ int replace(struct Node *root,char* word,char c,int uptill){
             
             
                 if(search(root,new_left)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_left);
+                    printf("corrected form of %s should be %s\n ",word,new_left);
                     return 1;
                 }
             
@@ -343,7 +351,7 @@ int replace(struct Node *root,char* word,char c,int uptill){
             
             
                 if(search(root,new_right)==1){
-                    printf("new word corrected form of %s must be %s\n ",word,new_right);
+                    printf("corrected form of %s should be %s\n ",word,new_right);
                     return 1;
                 }
             
@@ -370,8 +378,6 @@ void algorithm(struct Node *root,char* key,int length){
             return;
         }
 
-
-
         
         for(int j=0;j<strlen(key);j++){                                 //case1: when the error is because of one letter of the input word misplaced with adjacent letter
             if(replace(root,key,key[j],j)==1){
@@ -395,7 +401,7 @@ void algorithm(struct Node *root,char* key,int length){
 
             
             if(search(root,new_word)==1){
-                printf("the corrected form of %s should be %s\n",key,new_word);
+                printf("corrected form of %s should be %s\n",key,new_word);
                 flag=1;
                 break;
             }
@@ -406,7 +412,7 @@ void algorithm(struct Node *root,char* key,int length){
         if(flag==1){
             return;
         }
-
+    
 
         char new_word_case3[1000];                                         //case3: when one extra letter is typed by mistake at the end of the given input word
         copy_string(new_word_case3,key,length-1);
@@ -418,7 +424,7 @@ void algorithm(struct Node *root,char* key,int length){
         }
         
         
-        printf("if none case %s\n",word_arr[0]);                              //case4: else case it just gives the min length word of the maximum similar letter input word that could be present in dictionary
+        printf("correct form of %s might be %s\n",key,word_arr[0]);                              //case4: else case it just gives the min length word of the maximum similar letter input word that could be present in dictionary
         return;
 
 
@@ -461,5 +467,6 @@ int main()
 
     //search(root, key)? printf("Found\n"): printf("Not Found\n");
     algorithm(root,key,strlen(key));
+    
 	return 0;
 }
